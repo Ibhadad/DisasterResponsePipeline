@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 # download necessary NLTK data
 import nltk
 import re
+import pickle
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 nltk.download(['punkt', 'wordnet'])
@@ -18,6 +19,9 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.metrics import f1_score
 from sklearn.model_selection import GridSearchCV
+%matplotlib inline
+import matplotlib.pyplot as plt
+from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, f1_score
 url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
 
 def load_data(database_filepath):
@@ -25,6 +29,7 @@ def load_data(database_filepath):
     df = pd.read_sql_table('Messages', con=engine)
     X = df['message']    
     Y = df[df.columns[4:]]
+    YY = df.columns[4:]
 
 
 def tokenize(text):
@@ -53,21 +58,19 @@ def build_model():
            #('clf', RandomForestClassifier())
             ])
     pipeline.fit(X_train, y_train)
-    y_pred = pipeline.predict(X_test)
-    parameters = {'vect__min_df': [1, 5],
-                  'tfidf__use_idf':[True, False],
-                  'clf__estimator__n_estimators':[10, 25], 
-                  'clf__estimator__min_samples_split':[2, 5, 10]}
-
+   
+    parameters = {'clf__estimator__n_estimators':[10, 25]
+                  }
     cv = GridSearchCV(pipeline, parameters)
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    pass
+     y_pred = pipeline.predict(X_test)
 
 
 def save_model(model, model_filepath):
-    pass
+    with open(model_filepath, 'wb') as file:
+    pickle.dump(model, file)
 
 
 def main():
