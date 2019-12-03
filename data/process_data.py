@@ -7,10 +7,12 @@ def load_data(messages_filepath, categories_filepath):
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = pd.merge(messages, categories)
+    return df
     
 
 
 def clean_data(df):
+    messages = df[['message', 'genre', 'id']]
     categories = df['categories'].str.split(';', expand=True).add_prefix('categories_')
     row = categories.iloc[0]
     category_colnames = list()
@@ -20,11 +22,11 @@ def clean_data(df):
     categories.columns = category_colnames
     for column in categories:
     # set each value to be the last character of the string
-    categories[column] = categories[column].str[-1]
+        categories[column] = categories[column].str[-1]
     
     # convert column from string to numeric
     categories[column] = categories[column].astype(int)
-    
+    categories = (categories > 0).astype(int)
     df.drop(['categories'], axis=1, inplace = True)
     categories['id'] = df['id']
     df = pd.merge(messages, categories)
@@ -33,7 +35,8 @@ def clean_data(df):
 
 
 def save_data(df, database_filename):
-    engine = create_engine('sqlite:///{}'.format(database_filepath))
+    #engine = create_engine('sqlite:///' + data + '/DisasterMessages.db')
+    engine = create_engine('sqlite:///' + database_filename)
     df.to_sql('Messages', engine, index=False, if_exists='replace')  
 
 
